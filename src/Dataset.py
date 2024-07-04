@@ -9,8 +9,8 @@ import os
 import numpy as np
 from utils import *
 
-#OCT画像のデータセット
-class OCTDatasetBase(Dataset):
+#Slit画像のデータセット
+class SlitDatasetBase(Dataset):
     def __init__(self,image_path_dir,transform=None):
         images,image_paths,labels,item_indexes = [],[],[],[]
         images_append = images.append
@@ -18,51 +18,26 @@ class OCTDatasetBase(Dataset):
         item_index = 0
         self.transform = transform
 
-        image_DME_paths = glob(os.path.join(image_path_dir,"DME_under/*.jpeg"))
-        image_NORMAL_paths = glob(os.path.join(image_path_dir,"NORMAL_under/*.jpeg"))
-        image_CNV_paths = glob(os.path.join(image_path_dir,"CNV_under/*.jpeg"))
-        image_DRUSEN_paths = glob(os.path.join(image_path_dir,"DRUSEN_under/*.jpeg"))
+        image_Exfoliation_paths = glob(os.path.join(image_path_dir,"exfoliation_slit/*.jpg"))
+        image_NORMAL_paths = glob(os.path.join(image_path_dir,"notexfoliation_slit/*.jpg"))
 
-        # DME
-        #print(image_DME_paths)
-        for image_path in image_DME_paths:
+        # Exfoliation
+        for image_path in image_Exfoliation_paths:
             item_indexes.append(item_index)
             item_index += 1
             image_paths.append(image_path)
-            image = Image.open(image_path).convert('L')
+            image = Image.open(image_path).convert('RGB')
             images_append(self.transform(image))
             labels.append(1)
 
         # NORMAL
-        #print(image_NORMAL_paths)
         for image_path in image_NORMAL_paths:
             item_indexes.append(item_index)
             item_index += 1
             image_paths.append(image_path)
-            image = Image.open(image_path).convert('L')
+            image = Image.open(image_path).convert('RGB')
             images_append(self.transform(image))
             labels.append(0)
-
-        # CNV
-        #print(image_CNV_paths)
-        for image_path in image_CNV_paths:
-            item_indexes.append(item_index)
-            item_index += 1
-            image_paths.append(image_path)
-            image = Image.open(image_path).convert('L')
-            images_append(self.transform(image))
-            labels.append(2)
-
-        # DRUSEN
-        #print(image_DRUSEN_paths)
-        for image_path in image_DRUSEN_paths:
-            item_indexes.append(item_index)
-            item_index += 1
-            image_paths.append(image_path)
-            image = Image.open(image_path).convert('L')
-            images_append(self.transform(image))
-            labels.append(3)
-            
 
         self.image_paths = np.array(image_paths)
         self.images = images
@@ -87,7 +62,7 @@ class OCTDatasetBase(Dataset):
         return torch.Tensor(label)
 
 
-class OCTDataset(OCTDatasetBase):
+class SlitDataset(SlitDatasetBase):
     def get_label(self, label_base):
         if label_base == 1:
             return 0
@@ -98,25 +73,24 @@ def load_dataset():
     train_transform = \
         transforms.Compose([transforms.Resize(config.image_size),
                             transforms.CenterCrop(config.image_size),
-                            transforms.Grayscale(num_output_channels=3),
                             transforms.ToTensor(),
-                            transforms.Normalize((0.5,0.5,0.5),
-                                                 (0.5,0.5,0.5))])
+                            transforms.Normalize((0.485,0.456,0.406),
+                                                 (0.229,0.224,0.225))])
     test_transform = \
         transforms.Compose([transforms.Resize(config.image_size),
                             transforms.CenterCrop(config.image_size),
                             transforms.Grayscale(num_output_channels=3),
                             transforms.ToTensor(),
-                            transforms.Normalize((0.5,0.5,0.5),
-                                                 (0.5,0.5,0.5))])
+                            transforms.Normalize((0.485,0.456,0.406),
+                                                 (0.229,0.224,0.225))])
     
     dataset = {}
     dataset['train'] = \
-            OCTDataset(image_path_dir=config.train_path,
+            SlitDataset(image_path_dir=config.train_path,
                                     transform=train_transform)
 
     dataset['test'] = \
-            OCTDataset(image_path_dir=config.test_path,transform=test_transform)
+            SlitDataset(image_path_dir=config.test_path,transform=test_transform)
     print('ok')
 
     return dataset

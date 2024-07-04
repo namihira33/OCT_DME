@@ -45,9 +45,12 @@ class Resnet34(nn.Module):
         self.net = models.resnet34()
         self.net.conv1 = nn.Conv2d(3,64,7,stride=(2,2),padding=(3,3))
         self.net.fc = nn.Linear(in_features=512,out_features=config.n_class)
+        self.softmax = nn.Softmax(dim=1)
 
     def forward(self,x):
-        return self.net(x)
+        x = self.net(x)
+        x = self.softmax(x)
+        return x
 
 class Resnet18(nn.Module):
     def __init__(self):
@@ -79,6 +82,8 @@ class ViT(nn.Module):
     def __init__(self,num_classes=config.n_class):
         super().__init__()
         self.net = timm.create_model('vit_base_patch16_224_in21k',pretrained=True,num_classes=config.n_class)
+        self.softmax = nn.Softmax(dim=1)
+
 
         # 重みを更新するパラメータを選択する
         update_param_names = ['head.weight','head.bias']
@@ -100,13 +105,11 @@ class ViT21k_FF(nn.Module):
     def __init__(self,num_classes=config.n_class):
         super().__init__()
         self.net = timm.create_model('vit_base_patch16_224_in21k',pretrained=True,num_classes=config.n_class)
-
-
-#       self.softmax = nn.Softmax(dim=1)
+        self.softmax = nn.Softmax(dim=1)
 
     def forward(self,x):
         x = self.net(x)
-        #x = self.softmax(x)
+        x = self.softmax(x)
         return x
     
 #ViT追加とpretrainアリの場合はモデルの重み初期化、なしの場合はモデルの重み初期化なしにするためのパラメータ追加
@@ -127,6 +130,6 @@ def make_model(name,n_per_unit):
         net = EfficientNetV2().to(device)
     elif name =='ViT':
         net = ViT().to(device)
-    elif name == 'ViT_21kFF':
+    elif name == 'ViT_21k':
         net = ViT21k_FF().to(device)
     return net

@@ -258,12 +258,45 @@ class Evaluater():
 
 
         #Auc値の計算
-        auc = roc_auc_score(labels[:,3], preds[:,3])
-        #ROC曲線の描画
-        fpr,tpr,threshold = roc_curve(labels[:,3],preds[:,3])
-        print(threshold)
+
+        labels = np.argmax(labels,axis=1)
+
+        try:
+            roc_auc = roc_auc_score(labels, preds[:,1])
+        except:
+            roc_auc = 0
+        
+        #labels = np.argmax(labels,axis=1)
+
+        precisions, recalls, thresholds = precision_recall_curve(labels, preds[:,1])
+        try:
+            pr_auc = auc(recalls, precisions)
+        except:
+            pr_auc = 0
+
+        temp_class = np.arange(config.n_class)
+        preds_scores = np.dot(preds,temp_class)
+
+        preds_scores[preds_scores < 0.5] = 0
+        preds_scores[preds_scores >= 0.5] = 1
+
+        print(preds_scores)
+
+        total_loss /= len(preds)
+        recall = recall_score(labels,preds_scores)
+        precision = precision_score(labels,preds_scores)
+        
+        f1 = f1_score(labels,preds_scores)
+        confusion_Matrix = confusion_matrix(labels,preds_scores)
+
+        print("au-roc:", roc_auc)
+        print("au-prc:",pr_auc)
+        print("recall:",recall)
+        print("f1:",f1)
+        
+
         fig,ax = plt.subplots()
-        plt.plot(fpr,tpr,label = 'ROC curve (area = %.3f'%auc)
+        #plt.plot(fpr,tpr,label = 'ROC curve (area = %.3f'%auc)
         plt.legend()
         plt.title('ROC curve')
         plt.xlabel('False Positive Rate')
@@ -277,8 +310,6 @@ class Evaluater():
 
         for threshold in [0.5]:
 
-            preds = copy.deepcopy(preds_origin)[:,3]
-            labels = copy.deepcopy(labels_origin)[:,3]
             #出力をもとに分類
             #temp_class = np.arange(4)
             #preds = np.dot(preds,temp_class)
@@ -292,7 +323,7 @@ class Evaluater():
             #labels[labels == 1] = 1
 
             #混同行列を作り、ヒートマップで可視化。
-            cm = confusion_matrix(labels,preds)
+            cm = confusion_matrix(labels,preds_scores)
             fig,ax = plt.subplots()
 
             #import matplotlib
@@ -311,23 +342,23 @@ class Evaluater():
 
             plt.savefig(os.path.join(config.LOG_DIR_PATH,'images',fig_path))
 
-            right += (preds == labels).sum()
-            notright += len(preds) - (preds == labels).sum()
-            accuracy = right / len(self.dataset['test'])
-            recall = recall_score(labels,preds)
-            precision = precision_score(labels,preds)
-            print('threshold:',threshold)
-            print('accuracy :',accuracy)
-            print('auc :',auc)
+            #right += (preds == labels).sum()
+            #notright += len(preds) - (preds == labels).sum()
+            #accuracy = right / len(self.dataset['test'])
+            #recall = recall_score(labels,preds)
+            #precision = precision_score(labels,preds)
+            #print('threshold:',threshold)
+            #print('accuracy :',accuracy)
+            #print('auc :',auc)
 
 
         #評価値の棒グラフを作って保存。
-        fig,ax = plt.subplots()
-        ax.bar(['Acc','Auc','Recall','Precision'],[accuracy,auc,recall,precision],width=0.4,tick_label=['Accuracy','Auc','Recall','Precision'],align='center')
-        ax.grid(True)
-        plt.yticks(np.linspace(0,1,21))
-        fig_path = self.n_ex+'_'+self.c['model_name']+'_'+self.c['n_epoch']+'ep_graph.png'
-        fig.savefig(os.path.join(config.LOG_DIR_PATH,'images',fig_path))
+        #fig,ax = plt.subplots()
+        #ax.bar(['Acc','Auc','Recall','Precision'],[accuracy,auc,recall,precision],width=0.4,tick_label=['Accuracy','Auc','Recall','Precision'],align='center')
+        #ax.grid(True)
+        #plt.yticks(np.linspace(0,1,21))
+        #fig_path = self.n_ex+'_'+self.c['model_name']+'_'+self.c['n_epoch']+'ep_graph.png'
+        #fig.savefig(os.path.join(config.LOG_DIR_PATH,'images',fig_path))
 
 
 if __name__ == '__main__':

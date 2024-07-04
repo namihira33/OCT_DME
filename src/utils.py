@@ -58,7 +58,8 @@ class BinaryOverSampler:
         labels = torch.empty(0)
 
         for i in range(len(dataset)):
-            img = dataset[i][0]
+            img = dataset[i][0].unsqueeze(0)
+            print(img.size())
             imgs = torch.cat((imgs,img),0)
             #label = dataset[i][1]
             label = torch.Tensor([np.argmax(dataset[i][1].detach().cpu().numpy())])

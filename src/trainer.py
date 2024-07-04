@@ -119,7 +119,7 @@ class Trainer():
         self.n_splits = 5
         self.loss = {}
         self.now = '{:%y%m%d%H%M}'.format(datetime.now())
-        self.log_path = 'C:/Users/syunt/OctDMEBinary/log/' + str(self.now)
+        self.log_path = '/home/takinami/exfoliation/log/' + str(self.now)
         os.makedirs(self.log_path, exist_ok=True)
         write_LogHeader(self.log_path)
 
@@ -139,7 +139,8 @@ class Trainer():
             self.c = c
 
             self.net = make_model(self.c['model_name'],1)
-            self.optimizer = optim.SGD(params=self.net.parameters(),lr=self.c['lr'],momentum=0.9)
+            #self.optimizer = optim.SGD(params=self.net.parameters(),lr=self.c['lr'],momentum=0.9)
+            self.optimizer = optim.Adam(params=self.net.parameters(),lr=self.c['lr'])
             #self.net = nn.DataParallel(self.net)
             #訓練、検証に分けてデータ分割
             if os.path.exists(config.normal_pkl):
@@ -173,6 +174,7 @@ class Trainer():
                 if self.c['evaluate']:
                     learning_dataset = self.dataset['train']
                 if not self.c['evaluate']:
+                    learning_dataset = Subset_label(self.dataset['train'],learning_id)
                     valid_dataset = Subset_label(self.dataset['train'],valid_id)
                 self.class_weight = calc_class_weight(learning_dataset,config.n_class,beta=self.c['beta'])
                 self.criterion = Focal_MultiLabel_Loss(gamma=self.c['gamma'],weights=self.class_weight.to(device))
@@ -286,8 +288,8 @@ class Trainer():
             labels_ = labels_.to(device)
 
             #Samplerを使うときの処理
-            if phase == 'learning' and ((self.c['sampler'] == 'over') or (self.c['sampler'] == 'under')):
-                inputs_ = inputs_.unsqueeze(1)
+            #if phase == 'learning' and ((self.c['sampler'] == 'over') or (self.c['sampler'] == 'under')):
+                #inputs_ = inputs_.unsqueeze(1)
                 #labels_ = labels_.unsqueeze(1)
 
 
@@ -295,8 +297,8 @@ class Trainer():
 
             with torch.set_grad_enabled(phase == 'learning'):
                 outputs_ = self.net(inputs_).to(device)
-                softmax = nn.Softmax(dim=1)
-                outputs_ = softmax(outputs_)
+                #softmax = nn.Softmax(dim=1)
+                #outputs_ = softmax(outputs_)
                 #outputs__ = outputs_.unsqueeze(1)
                 loss = self.criterion(outputs_, labels_)
                 total_loss += loss.item()
@@ -314,29 +316,33 @@ class Trainer():
 
         preds = np.concatenate(preds)
         labels = np.concatenate(labels)
+        labels = np.argmax(labels,axis=1)
+
         try:
-            roc_auc = roc_auc_score(labels, preds)
+            roc_auc = roc_auc_score(labels, preds[:,1])
         except:
             roc_auc = 0
+        
+        #labels = np.argmax(labels,axis=1)
 
-        temp_class = np.arange(4)
-        preds_scores = np.dot(preds,temp_class)
-
-        preds_scores[preds_scores < 2.5] = 0
-        preds_scores[preds_scores >= 2.5] = 1
-
-        labels = np.argmax(labels,axis=1)
-        labels[labels != 3] = 0
-        labels[labels == 3] = 1
-
-        total_loss /= len(preds)
-        recall = recall_score(labels,preds_scores)
-        precision = precision_score(labels,preds_scores)
-        precisions, recalls, thresholds = precision_recall_curve(labels, preds_scores)
+        precisions, recalls, thresholds = precision_recall_curve(labels, preds[:,1])
         try:
             pr_auc = auc(recalls, precisions)
         except:
             pr_auc = 0
+
+        temp_class = np.arange(config.n_class)
+        preds_scores = np.dot(preds,temp_class)
+
+        preds_scores[preds_scores < 0.5] = 0
+        preds_scores[preds_scores >= 0.5] = 1
+
+        print(preds_scores)
+
+        total_loss /= len(preds)
+        recall = recall_score(labels,preds_scores)
+        precision = precision_score(labels,preds_scores)
+        
         f1 = f1_score(labels,preds_scores)
         confusion_Matrix = confusion_matrix(labels,preds_scores)
         try:

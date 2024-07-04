@@ -2,7 +2,7 @@ from trainer import Trainer
 import numpy as np
 import sys
 
-c = {'model_name': ['ViT_21kFF'],'seed':[0], 'bs': 32,'lr':[5e-4]}
+c = {'model_name': ['Vgg16_bn'],'seed':[0], 'bs': 8,'lr':[5e-4]}
 
 
 if __name__ =='__main__':
