@@ -1,4 +1,3 @@
-python ./src/evaluate.py 110
-python ./src/evaluate.py 111
-python ./src/evaluate.py 112
-python ./src/evaluate.py 113
+python3 ./src/evaluate.py 291
+python3 ./src/evaluate.py 292
+python3 ./src/evaluate.py 293

@@ -274,29 +274,37 @@ class Evaluater():
         except:
             pr_auc = 0
 
+
+        fpr, tpr, thresholds = roc_curve(labels, preds[:,1]) 
+        print(thresholds) 
+
         temp_class = np.arange(config.n_class)
         preds_scores = np.dot(preds,temp_class)
 
-        preds_scores[preds_scores < 0.5] = 0
-        preds_scores[preds_scores >= 0.5] = 1
+        threshold = 0.25
+
+        preds_scores[preds_scores < threshold] = 0
+        preds_scores[preds_scores >= threshold] = 1
 
         print(preds_scores)
 
         total_loss /= len(preds)
         recall = recall_score(labels,preds_scores)
         precision = precision_score(labels,preds_scores)
-        
+        accuracy = accuracy_score(labels,preds_scores)
         f1 = f1_score(labels,preds_scores)
         confusion_Matrix = confusion_matrix(labels,preds_scores)
 
         print("au-roc:", roc_auc)
         print("au-prc:",pr_auc)
+        print("precision:",precision)
         print("recall:",recall)
         print("f1:",f1)
-        
+        print("Accuracy:",accuracy)
+
 
         fig,ax = plt.subplots()
-        #plt.plot(fpr,tpr,label = 'ROC curve (area = %.3f'%auc)
+        plt.plot(fpr,tpr)
         plt.legend()
         plt.title('ROC curve')
         plt.xlabel('False Positive Rate')

@@ -119,8 +119,9 @@ class Trainer():
         self.n_splits = 5
         self.loss = {}
         self.now = '{:%y%m%d%H%M}'.format(datetime.now())
-        self.log_path = '/home/takinami/exfoliation/log/' + str(self.now)
+        self.log_path = '/home/cdranami/Desktop/exfoliation/log/' + str(self.now)
         os.makedirs(self.log_path, exist_ok=True)
+        print(self.log_path)
         write_LogHeader(self.log_path)
 
     def run(self):

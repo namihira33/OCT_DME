@@ -18,8 +18,8 @@ class SlitDatasetBase(Dataset):
         item_index = 0
         self.transform = transform
 
-        image_Exfoliation_paths = glob(os.path.join(image_path_dir,"exfoliation_slit/*.jpg"))
-        image_NORMAL_paths = glob(os.path.join(image_path_dir,"notexfoliation_slit/*.jpg"))
+        image_Exfoliation_paths = glob(os.path.join(image_path_dir,"exfoliation_all/*.jpg"))
+        image_NORMAL_paths = glob(os.path.join(image_path_dir,"notexfoliation_all/*.jpg"))
 
         # Exfoliation
         for image_path in image_Exfoliation_paths:

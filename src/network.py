@@ -69,7 +69,7 @@ class Resnet18(nn.Module):
 class EfficientNetV2(nn.Module):
     def __init__(self,num_classes=config.n_class):
         super().__init__()
-        self.net = timm.create_model('efficientnetv2_s', num_classes=config.n_class) 
+        self.net = timm.create_model('efficientnetv2_m', num_classes=config.n_class) 
         self.softmax = nn.Softmax(dim=1)
 
     def forward(self,x):
@@ -78,20 +78,20 @@ class EfficientNetV2(nn.Module):
         return x
     
 class ViT(nn.Module):
-    model_name = 'vit_base_patch16_224_in21k'
     def __init__(self,num_classes=config.n_class):
         super().__init__()
-        self.net = timm.create_model('vit_base_patch16_224_in21k',pretrained=True,num_classes=config.n_class)
+        model_name = 'vit_base_patch16_224'
+        self.net = timm.create_model(model_name,pretrained=True,num_classes=config.n_class)
         self.softmax = nn.Softmax(dim=1)
 
 
-        # 重みを更新するパラメータを選択する
-        update_param_names = ['head.weight','head.bias']
-        for name, param in self.net.named_parameters():
-            if name in update_param_names:
-                param.requires_grad = True
-            else:
-                param.requires_grad = False
+        # # 重みを更新するパラメータを選択する
+        # update_param_names = ['head.weight','head.bias']
+        # for name, param in self.net.named_parameters():
+        #     if name in update_param_names:
+        #         param.requires_grad = True
+        #     else:
+        #         param.requires_grad = False
 
         self.softmax = nn.Softmax(dim=1)
 
@@ -101,16 +101,65 @@ class ViT(nn.Module):
         return x
     
 class ViT21k_FF(nn.Module):
-    model_name = 'vit_base_patch16_224_in21k'
     def __init__(self,num_classes=config.n_class):
         super().__init__()
-        self.net = timm.create_model('vit_base_patch16_224_in21k',pretrained=True,num_classes=config.n_class)
+        model_name = 'vit_base_patch16_224_in21k'
+        self.net = timm.create_model(model_name,pretrained=True,num_classes=config.n_class)
         self.softmax = nn.Softmax(dim=1)
 
     def forward(self,x):
         x = self.net(x)
         x = self.softmax(x)
         return x
+
+class SwinTransformer(nn.Module):
+    def __init__(self,num_classes=config.n_class):
+        super().__init__()
+        model_name = 'swin_base_patch4_window7_224'
+        self.net =  model = timm.create_model(model_name, pretrained=True,num_classes=config.n_class)
+        self.softmax = nn.Softmax(dim=1)
+
+    def forward(self,x):
+        x = self.net(x)
+        x = self.softmax(x)
+        return x
+
+class DeiT(nn.Module):
+    def __init__(self,num_classes=config.n_class):
+        super().__init__()
+        model_name =  'deit_base_distilled_patch16_224'
+        self.net =  model = timm.create_model(model_name, pretrained=True,num_classes=config.n_class)
+        self.softmax = nn.Softmax(dim=1)
+
+    def forward(self,x):
+        x = self.net(x)
+        x = self.softmax(x)
+        return x
+
+class ConViT(nn.Module):
+    def __init__(self,num_classes=config.n_class):
+        super().__init__()
+        model_name =  'convit_base'
+        self.net =  model = timm.create_model(model_name, pretrained=True,num_classes=config.n_class)
+        self.softmax = nn.Softmax(dim=1)
+
+    def forward(self,x):
+        x = self.net(x)
+        x = self.softmax(x)
+        return x
+
+class DeiT3(nn.Module):
+    def __init__(self,num_classes=config.n_class):
+        super().__init__()
+        model_name =  'deit3_base_patch16_224'
+        self.net =  model = timm.create_model(model_name, pretrained=True,num_classes=config.n_class)
+        self.softmax = nn.Softmax(dim=1)
+
+    def forward(self,x):
+        x = self.net(x)
+        x = self.softmax(x)
+        return x
+
     
 #ViT追加とpretrainアリの場合はモデルの重み初期化、なしの場合はモデルの重み初期化なしにするためのパラメータ追加
 
@@ -132,4 +181,11 @@ def make_model(name,n_per_unit):
         net = ViT().to(device)
     elif name == 'ViT_21k':
         net = ViT21k_FF().to(device)
+    elif name == 'DeiT':
+        net = DeiT().to(device)
+    elif name == 'Swin':
+        net = SwinTransformer().to(device)
+    elif name == 'ConViT':
+        net = ConViT().to(device)
+
     return net
